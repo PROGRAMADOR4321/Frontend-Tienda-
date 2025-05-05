@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { addCart } from "../redux/action";
-
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const Products = () => {
   const [data, setData] = useState([]);
-  const [filter, setFilter] = useState(data);
+  const [filter, setFilter] = useState([]);
   const [loading, setLoading] = useState(false);
   let componentMounted = true;
 
@@ -23,10 +21,31 @@ const Products = () => {
   useEffect(() => {
     const getProducts = async () => {
       setLoading(true);
-      const response = await fetch("https://fakestoreapi.com/products/");
-      if (componentMounted) {
-        setData(await response.clone().json());
-        setFilter(await response.json());
+
+      try {
+        const response = await fetch("http://localhost:5000/api/products");
+
+        // Verificar si la respuesta fue exitosa (status 200)
+        if (!response.ok) {
+          throw new Error(`Error en la solicitud: ${response.status}`);
+        }
+
+        // Obtener la respuesta como texto y mostrarla para verificarla
+        const responseText = await response.text();
+        console.log("Respuesta de la API:", responseText); // Imprimir la respuesta como texto
+
+        // Intentar convertir la respuesta a JSON
+        const data = JSON.parse(responseText);
+        console.log("Datos de productos:", data);
+
+        // Si la respuesta es válida, actualizar el estado
+        if (componentMounted) {
+          setData(data);
+          setFilter(data);
+        }
+      } catch (error) {
+        console.error("Hubo un error al obtener los productos:", error);
+      } finally {
         setLoading(false);
       }
 
@@ -66,8 +85,9 @@ const Products = () => {
     );
   };
 
-  const filterProduct = (cat) => {
-    const updatedList = data.filter((item) => item.category === cat);
+  const filterProduct = (categoryId) => {
+    // Filtrar los productos según el categoryId
+    const updatedList = data.filter((item) => item.categoryId === categoryId);
     setFilter(updatedList);
   };
 
@@ -81,27 +101,28 @@ const Products = () => {
           >
             All
           </button>
+        
           <button
             className="btn btn-outline-dark btn-sm m-2"
-            onClick={() => filterProduct("men's clothing")}
+            onClick={() => filterProduct("68180894943fa4636cd491ce")}
           >
             Men's Clothing
           </button>
           <button
             className="btn btn-outline-dark btn-sm m-2"
-            onClick={() => filterProduct("women's clothing")}
+            onClick={() => filterProduct("68180894943fa4636cd491cf")}
           >
             Women's Clothing
           </button>
           <button
             className="btn btn-outline-dark btn-sm m-2"
-            onClick={() => filterProduct("jewelery")}
+            onClick={() => filterProduct("68180894943fa4636cd491d0")}
           >
-            Jewelery
+            Jewelry
           </button>
           <button
             className="btn btn-outline-dark btn-sm m-2"
-            onClick={() => filterProduct("electronics")}
+            onClick={() => filterProduct("68180894943fa4636cd491d1")}
           >
             Electronics
           </button>
@@ -131,8 +152,6 @@ const Products = () => {
                 </div>
                 <ul className="list-group list-group-flush">
                   <li className="list-group-item lead">$ {product.price}</li>
-                  {/* <li className="list-group-item">Dapibus ac facilisis in</li>
-                    <li className="list-group-item">Vestibulum at eros</li> */}
                 </ul>
                 <div className="card-body">
                   <Link
@@ -158,6 +177,7 @@ const Products = () => {
       </>
     );
   };
+
   return (
     <>
       <div className="container my-3 py-3">
